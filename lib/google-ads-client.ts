@@ -17,7 +17,7 @@ interface AccessTokenResponse {
 }
 
 export class GoogleAdsClient {
-  protected config: GoogleAdsConfig;
+  public config: GoogleAdsConfig;
   private accessToken: string | null = null;
   private tokenExpiresAt: number = 0;
 
