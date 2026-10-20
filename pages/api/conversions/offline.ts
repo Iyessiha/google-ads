@@ -6,7 +6,7 @@
 
 import { NextApiRequest, NextApiResponse } from "next";
 import { createGoogleAdsClient } from "@/lib/google-ads-client";
-import { ApiResponse } from "@/types";
+import { ApiResponse } from "@/lib/types";
 
 export default async function handler(
   req: NextApiRequest,
