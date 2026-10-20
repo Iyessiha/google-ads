@@ -421,9 +421,10 @@ export class GoogleAdsClientExtended extends GoogleAdsClient {
     );
 
     // Calculate ROI
+    const dataObj = data as any;
     return {
-      ...data,
-      calculated_roi: (data as any).results?.map((r: any) => ({
+      ...dataObj,
+      calculated_roi: dataObj.results?.map((r: any) => ({
         campaign_id: r.campaign.id,
         campaign_name: r.campaign.name,
         cost: parseInt(r.metrics.cost_micros || "0") / 1_000_000,
