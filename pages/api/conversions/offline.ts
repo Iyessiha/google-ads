@@ -5,8 +5,7 @@
  */
 
 import { NextApiRequest, NextApiResponse } from "next";
-import { GoogleAdsClientExtended } from "@/lib/google-ads-client-extended";
-import { createGoogleAdsClient } from "@/lib/google-ads-client";
+import { createExtendedClient } from "@/lib/create-extended-client";
 import { ApiResponse } from "@/types";
 
 export default async function handler(
@@ -34,13 +33,7 @@ export default async function handler(
       });
     }
 
-    const baseClient = createGoogleAdsClient();
-    const client = Object.assign(
-      Object.create(Object.getPrototypeOf(baseClient)),
-      baseClient,
-      GoogleAdsClientExtended.prototype
-    ) as GoogleAdsClientExtended;
-
+    const client = createExtendedClient() as any;
     const result = await client.sendOfflineConversion({
       gclid,
       conversion_action_id,
