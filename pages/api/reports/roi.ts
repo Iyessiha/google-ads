@@ -4,7 +4,7 @@
  */
 
 import { NextApiRequest, NextApiResponse } from "next";
-import { createExtendedClient } from "@/lib/create-extended-client";
+import { createGoogleAdsClient } from "@/lib/google-ads-client";
 import { ApiResponse } from "@/types";
 
 export default async function handler(
@@ -16,8 +16,38 @@ export default async function handler(
   }
 
   try {
-    const client = createExtendedClient() as any;
-    const result = await client.getCampaignROI();
+    const client = createGoogleAdsClient();
+    const query = `
+      SELECT
+        campaign.id,
+        campaign.name,
+        metrics.cost_micros,
+        metrics.conversion_value_micros,
+        segments.date
+      FROM campaign
+      WHERE segments.date >= LAST_30_DAYS
+      AND campaign.status != REMOVED
+    `;
+
+    const data = await client.request(
+      `customers/${client.config.customerId}/googleAds:search`,
+      { query }
+    );
+
+    const dataObj = data as any;
+    const result = {
+      ...dataObj,
+      calculated_roi: dataObj.results?.map((r: any) => ({
+        campaign_id: r.campaign.id,
+        campaign_name: r.campaign.name,
+        cost: parseInt(r.metrics.cost_micros || "0") / 1_000_000,
+        revenue: parseInt(r.metrics.conversion_value_micros || "0") / 1_000_000,
+        roi:
+          (parseInt(r.metrics.conversion_value_micros || "0") -
+            parseInt(r.metrics.cost_micros || "0")) /
+          parseInt(r.metrics.cost_micros || "1"),
+      })),
+    };
 
     return res.status(200).json({
       success: true,

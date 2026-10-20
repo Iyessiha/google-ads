@@ -4,7 +4,7 @@
  */
 
 import { NextApiRequest, NextApiResponse } from "next";
-import { createExtendedClient } from "@/lib/create-extended-client";
+import { createGoogleAdsClient } from "@/lib/google-ads-client";
 import { ApiResponse } from "@/types";
 
 export default async function handler(
@@ -25,12 +25,24 @@ export default async function handler(
       });
     }
 
-    const client = createExtendedClient() as any;
-    const result = await client.createAdGroup({
-      campaign_id,
-      name,
-      cpc_bid_micros,
-    });
+    const client = createGoogleAdsClient();
+    const operations = [
+      {
+        create: {
+          ad_group: {
+            campaign: `customers/${client.config.customerId}/campaigns/${campaign_id}`,
+            name,
+            status: "ENABLED",
+            cpc_bid_micros: cpc_bid_micros || 1000000,
+          },
+        },
+      },
+    ];
+
+    const result = await client.mutate(
+      `customers/${client.config.customerId}/ad_groups:create`,
+      operations
+    );
 
     return res.status(200).json({
       success: true,

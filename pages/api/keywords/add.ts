@@ -4,7 +4,7 @@
  */
 
 import { NextApiRequest, NextApiResponse } from "next";
-import { createExtendedClient } from "@/lib/create-extended-client";
+import { createGoogleAdsClient } from "@/lib/google-ads-client";
 import { ApiResponse } from "@/types";
 
 export default async function handler(
@@ -25,11 +25,25 @@ export default async function handler(
       });
     }
 
-    const client = createExtendedClient() as any;
-    const result = await client.addKeywords({
-      ad_group_id,
-      keywords,
-    });
+    const client = createGoogleAdsClient();
+    const operations = keywords.map((kw) => ({
+      create: {
+        ad_group_criterion: {
+          ad_group: `customers/${client.config.customerId}/ad_groups/${ad_group_id}`,
+          keyword: {
+            text: kw.text,
+            match_type: kw.match_type,
+          },
+          status: "ENABLED",
+          cpc_bid_micros: kw.bid_micros || 1000000,
+        },
+      },
+    }));
+
+    const result = await client.mutate(
+      `customers/${client.config.customerId}/ad_group_criteria:create`,
+      operations
+    );
 
     return res.status(200).json({
       success: true,

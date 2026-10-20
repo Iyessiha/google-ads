@@ -4,7 +4,7 @@
  */
 
 import { NextApiRequest, NextApiResponse } from "next";
-import { createExtendedClient } from "@/lib/create-extended-client";
+import { createGoogleAdsClient } from "@/lib/google-ads-client";
 import { ApiResponse } from "@/types";
 
 export default async function handler(
@@ -25,11 +25,23 @@ export default async function handler(
       });
     }
 
-    const client = createExtendedClient() as any;
-    const result = await client.createBudget({
-      name,
-      amount_micros,
-    });
+    const client = createGoogleAdsClient();
+    const operations = [
+      {
+        create: {
+          campaign_budget: {
+            name,
+            amount_micros,
+            delivery_method: "STANDARD",
+          },
+        },
+      },
+    ];
+
+    const result = await client.mutate(
+      `customers/${client.config.customerId}/campaign_budgets:create`,
+      operations
+    );
 
     return res.status(200).json({
       success: true,

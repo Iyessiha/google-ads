@@ -4,7 +4,7 @@
  */
 
 import { NextApiRequest, NextApiResponse } from "next";
-import { createExtendedClient } from "@/lib/create-extended-client";
+import { createGoogleAdsClient } from "@/lib/google-ads-client";
 import { ApiResponse } from "@/types";
 
 export default async function handler(
@@ -16,8 +16,27 @@ export default async function handler(
   }
 
   try {
-    const client = createExtendedClient() as any;
-    const result = await client.getCampaignPerformance();
+    const client = createGoogleAdsClient();
+    const query = `
+      SELECT
+        campaign.id,
+        campaign.name,
+        segments.date,
+        metrics.impressions,
+        metrics.clicks,
+        metrics.cost_micros,
+        metrics.conversions,
+        metrics.conversion_value_micros
+      FROM campaign
+      WHERE segments.date >= LAST_30_DAYS
+      AND campaign.status != REMOVED
+      ORDER BY segments.date DESC
+    `;
+
+    const result = await client.request(
+      `customers/${client.config.customerId}/googleAds:search`,
+      { query }
+    );
 
     return res.status(200).json({
       success: true,

@@ -5,7 +5,7 @@
  */
 
 import { NextApiRequest, NextApiResponse } from "next";
-import { createExtendedClient } from "@/lib/create-extended-client";
+import { createGoogleAdsClient } from "@/lib/google-ads-client";
 import { ApiResponse } from "@/types";
 
 export default async function handler(
@@ -33,14 +33,26 @@ export default async function handler(
       });
     }
 
-    const client = createExtendedClient() as any;
-    const result = await client.sendOfflineConversion({
-      gclid,
-      conversion_action_id,
-      conversion_date_time,
-      conversion_value,
-      currency_code,
-    });
+    const client = createGoogleAdsClient();
+    const operations = [
+      {
+        create: {
+          gclid_date_pair: {
+            gclid,
+            conversion_date_time,
+          },
+          conversion_action: `customers/${client.config.customerId}/conversion_actions/${conversion_action_id}`,
+          conversion_date_time,
+          conversion_value: conversion_value || 0,
+          currency_code: currency_code || "USD",
+        },
+      },
+    ];
+
+    const result = await client.mutate(
+      `customers/${client.config.customerId}/offline_user_conversions:create`,
+      operations
+    );
 
     return res.status(200).json({
       success: true,

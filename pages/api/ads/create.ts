@@ -4,7 +4,7 @@
  */
 
 import { NextApiRequest, NextApiResponse } from "next";
-import { createExtendedClient } from "@/lib/create-extended-client";
+import { createGoogleAdsClient } from "@/lib/google-ads-client";
 import { ApiResponse } from "@/types";
 
 export default async function handler(
@@ -27,14 +27,28 @@ export default async function handler(
       });
     }
 
-    const client = createExtendedClient() as any;
-    const result = await client.createSearchAd({
-      ad_group_id,
-      final_url,
-      headline1,
-      headline2,
-      description,
-    });
+    const client = createGoogleAdsClient();
+    const operations = [
+      {
+        create: {
+          ad: {
+            expanded_text_ad: {
+              headline_part1: headline1,
+              headline_part2: headline2,
+              description,
+              final_url,
+            },
+          },
+          ad_group: `customers/${client.config.customerId}/ad_groups/${ad_group_id}`,
+          status: "PAUSED",
+        },
+      },
+    ];
+
+    const result = await client.mutate(
+      `customers/${client.config.customerId}/ads:create`,
+      operations
+    );
 
     return res.status(200).json({
       success: true,

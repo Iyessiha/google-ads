@@ -4,7 +4,7 @@
  */
 
 import { NextApiRequest, NextApiResponse } from "next";
-import { createExtendedClient } from "@/lib/create-extended-client";
+import { createGoogleAdsClient } from "@/lib/google-ads-client";
 import { ApiResponse } from "@/types";
 
 export default async function handler(
@@ -25,12 +25,24 @@ export default async function handler(
       });
     }
 
-    const client = createExtendedClient() as any;
-    const result = await client.createAudience({
-      name,
-      description,
-      membership_status,
-    });
+    const client = createGoogleAdsClient();
+    const operations = [
+      {
+        create: {
+          customer_match_user_list: {
+            name,
+            description: description || "",
+            membership_status: membership_status || "CLOSED",
+            upload_keyword_type: "CONTACT_INFO",
+          },
+        },
+      },
+    ];
+
+    const result = await client.mutate(
+      `customers/${client.config.customerId}/customer_match_user_lists:create`,
+      operations
+    );
 
     return res.status(200).json({
       success: true,
